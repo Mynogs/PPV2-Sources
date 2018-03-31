@@ -1,0 +1,173 @@
+-- V1.0a AR
+-- 03.04.2017 10:29:06 AR V1.0b
+-- 22.06.2017 10:32:16 AR V1.0c
+-- 08.02.2018 17:53:33 AR V1.0d Optimize code generation, fix GUI
+
+generic = {
+  parameter = {
+    type = 0,
+    amplitude = 1.0,
+    bias = 0.0,
+    frequency = math.pi * 2.0,
+    phase = 0.0
+  },
+
+  refreshVisisble = function(self, type)
+    gui.set('EditFrequency', 'Visible', type <= 2)
+    gui.set('EditPhase', 'Visible', type <= 2)
+  end,
+
+  init = function(self)
+    block.setInputsPinCount(0)
+    block.setOutputsPinCount(1)
+    block.modifyFlags('SupressStopFunctionCall', true)
+  end,
+
+  open = function(self)
+    gui.add('Info', 'Info', 'Signal Generator', [[
+The Signal Generator block can produce one of four different
+waveforms: sine wave, square wave, sawtooth wave, and random wave.
+    ]])
+    gui.add('ComboBox', 'ComboBoxType', 'Type', [[
+Sine
+Square
+Sawtooth
+random]], {Width = 120})
+    gui.add('Edit', 'EditAmplitude', 'Amplitude')
+    gui.add('Edit', 'EditBias', 'Bias')
+    gui.add('Edit', 'EditFrequency', 'Frequency (rad/s)')
+    gui.add('Edit', 'EditPhase', 'Phase (rad)')
+    gui.set('ComboBoxType', 'ItemIndex', self.parameter.type)
+    gui.set('EditAmplitude', 'Number', self.parameter.amplitude)
+    gui.set('EditBias', 'Number', self.parameter.bias)
+    gui.set('EditFrequency', 'Number', self.parameter.frequency)
+    gui.set('EditPhase', 'Number', self.parameter.phase)
+    gui.setEventHandler(
+      self,
+      'ComboBoxType',
+      {
+        Click = function(self)
+          local type = gui.get('ComboBoxType', 'ItemIndex')
+          generic.refreshVisisble(self, type)
+        end
+      }
+    )
+    gui.setSize()
+    generic.refreshVisisble(self, self.parameter.type)
+  end,
+
+  apply = function(self)
+    self.parameter.type = gui.get('ComboBoxType', 'ItemIndex')
+    self.parameter.amplitude = gui.get('EditAmplitude', 'Number')
+    self.parameter.bias = gui.get('EditBias', 'Number')
+    self.parameter.frequency = gui.get('EditFrequency', 'Number')
+    self.parameter.phase = gui.get('EditPhase', 'Number')
+  end,
+
+  close = function()
+  end,
+
+  avatar = function(self)
+    return block.getDefaultAvatar(0x50, '', 'for i = 0, 3 do draw.rect(i * 10 + 5, 7, 7, 10) end')
+  end,
+
+  generate = function(self)
+    local sources = {
+      [==[ -- sine wave
+        local block = {}
+
+        block.start = function()
+          block.generator = coroutine.create(
+            function()
+              local phi = PHASE
+              while true do
+                coroutine.yield(math.sin(phi) AMPLITUDE BIAS)
+                phi = math.fmod(phi + sim.stepRateS * FREQUENCY, math.pi * 2.0)
+              end
+            end
+          )
+        end
+
+        block.step = function()
+          local _, q = coroutine.resume(block.generator)
+          return q
+        end
+
+        return block
+      ]==],
+      [==[ -- square wave
+        local block = {}
+
+        block.start = function()
+          block.generator = coroutine.create(
+            function()
+              local phi = PHASE
+              while true do
+                coroutine.yield((phi < math.pi and 1 or 0) AMPLITUDE BIAS)
+                phi = math.fmod(phi + sim.stepRateS * FREQUENCY, math.pi * 2.0)
+              end
+            end
+          )
+        end
+
+        block.step = function()
+          local _, q = coroutine.resume(block.generator)
+          return q
+        end
+
+        return block
+      ]==],
+      [==[ -- sawtooth wave
+        local block = {}
+
+        block.start = function()
+          block.generator = coroutine.create(
+            function()
+              local phi = PHASE
+              while true do
+                coroutine.yield(phi / (math.pi * 2.0) AMPLITUDE BIAS)
+                phi = math.fmod(phi + sim.stepRateS * FREQUENCY, math.pi * 2.0)
+              end
+            end
+          )
+        end
+
+        block.step = function()
+          local _, q = coroutine.resume(block.generator)
+          return q
+        end
+
+        return block
+      ]==],
+      [==[ -- random wave
+        local block = {}
+
+        block.start = function()
+          block.generator = coroutine.create(
+            function()
+              while true do
+                coroutine.yield(math.random() AMPLITUDE BIAS)
+              end
+            end
+          )
+        end
+
+        block.step = function()
+          local _, q = coroutine.resume(block.generator)
+          return q
+        end
+
+        return block
+      ]==],
+    }
+    local replaces = {
+      ['AMPLITUDE'] = self.parameter.amplitude ~= 1.0 and '* ' .. self.parameter.amplitude or '',
+      ['BIAS'] = self.parameter.bias ~= 0.0 and '+ ' .. self.parameter.bias or '',
+      ['FREQUENCY'] = self.parameter.frequency,
+      ['PHASE'] = self.parameter.phase,
+    }
+    return string.gsub(sources[self.parameter.type + 1], '%a+', replaces)
+  end,
+
+}
+

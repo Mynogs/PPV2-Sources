@@ -1,0 +1,67 @@
+-- V1.0a AR
+-- 31.12.2016 12:05:30 AR V1.0b
+
+generic = {
+  parameter = {
+    timeS = 1.0,
+    inital = 0.0,
+    final = 1.0,
+  },
+
+  init = function(self)
+    block.setInputsPinCount(0)
+    block.setOutputsPinCount(1)
+    block.modifyFlags('SupressStartFunctionCall', true)
+    block.modifyFlags('SupressStopFunctionCall', true)
+  end,
+
+  open = function(self)
+    gui.add('Info', 'Info', 'Step', 'Output a step')
+    gui.add('Edit', 'EditTime', 'Time (s)')
+    gui.add('Edit', 'EditInital', 'Inital value')
+    gui.add('Edit', 'EditFinal', 'Final value')
+    gui.set('EditTime', 'Number', self.parameter.timeS)
+    gui.set('EditInital', 'Text', self.parameter.inital)
+    gui.set('EditFinal', 'Text', self.parameter.final)
+    gui.setSize()
+  end,
+
+  apply = function(self)
+    self.parameter.timeS = gui.get('EditTime', 'Number')
+    self.parameter.inital = gui.get('EditInital', 'Text')
+    self.parameter.final = gui.get('EditFinal', 'Text')
+  end,
+
+  close = function()
+  end,
+
+  avatar = function(self)
+    return block.getDefaultAvatar(0x50, '', [[
+      draw.line(px(30), py(60), px(50), py(60), px(50), py(40), px(70), py(40))
+    ]])
+  end,
+
+  generate = function(self)
+    local source =
+      [==[
+        return {
+
+          step = function()
+            if sim.timeS >= TIME then
+              return FINAL;
+            end
+            return INITAL
+          end
+
+        }
+      ]==]
+    local replaces = {
+      ['TIME'] = self.parameter.timeS,
+      ['INITAL'] = self.parameter.inital,
+      ['FINAL'] = self.parameter.final,
+    }
+    return string.gsub(source, '%a+', replaces)
+  end,
+
+}
+

@@ -1,0 +1,71 @@
+-- 09.07.2017 08:14:10 AR V1.0a
+
+generic = {
+  parameter = {
+    start = 0.1 * math.pi * 2.0,
+    stop = 10.0 * math.pi * 2.0,
+    timeS = 1
+  },
+
+  init = function(self)
+    block.setInputsPinCount(0)
+    block.setOutputsPinCount(1)
+    block.modifyFlags('SupressStartFunctionCall', true)
+    block.modifyFlags('SupressStopFunctionCall', true)
+  end,
+
+  open = function(self)
+    gui.add('Info', 'Info', 'Cirp', [[
+Output a linear chirp signal.
+Sine wave whose frequency varies linearly with time
+]])
+    gui.add('Edit', 'EditStart', 'Start frquency (rad/s)')
+    gui.add('Edit', 'EditStop', 'Stop frequency (rad/s)')
+    gui.add('Edit', 'EditTime', 'Time (s)')
+    gui.set('EditStart', 'Number', self.parameter.start)
+    gui.set('EditStop', 'Number', self.parameter.stop)
+    gui.set('EditTime', 'Number', self.parameter.timeS)
+    gui.setSize()
+  end,
+
+  apply = function(self)
+    self.parameter.start = gui.get('EditStart', 'Number')
+    self.parameter.stop = gui.get('EditStop', 'Number')
+    self.parameter.timeS = gui.get('EditTime', 'Number')
+  end,
+
+  close = function()
+  end,
+
+  avatar = function(self)
+    return block.getDefaultAvatar(0x50, "'\\xE2\\x97\\xA0\\xE2\\x97\\xA1'")
+  end,
+
+  generate = function(self)
+    local source =
+      [==[
+        local block = {}
+
+        block.start = function()
+        end
+
+        block.step = function()
+          --return math.sin(sim.timeS * (sys.norm(sim.timeS, TIME) * DELTA + START))
+          --return (sim.timeS * (sys.norm(sim.timeS, TIME) * DELTA + START))
+          return math.sin(math.fmod(sim.timeS * (sys.norm(sim.timeS, TIME) * DELTA + START), math.pi * 2.0))
+        end
+
+        block.stop = function()
+        end
+
+        return block
+      ]==]
+    local replaces = {
+      ['TIME'] = self.parameter.timeS,
+      ['DELTA'] = self.parameter.stop - self.parameter.start,
+      ['START'] = self.parameter.start,
+    }
+    return string.gsub(source, '%a+', replaces)
+  end,
+
+}

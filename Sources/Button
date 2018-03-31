@@ -1,0 +1,71 @@
+-- 05.01.2018 09:29:30 AR V1.0
+
+-- During simulation the input value is stored in the token list.
+-- The key it the block UUID, the value is the input value as string.
+-- The avatar get the value from the token table and show it.
+-- AR
+
+block.setSize(41, 41)
+
+generic = {
+  parameter = {
+  },
+
+  init = function(self)
+    block.setInputsPinCount(0)
+    block.setOutputsPinCount(1)
+    block.setOutputPinTypeRestrains(1, 'boolean')
+    block.modifyFlags('MouseReactiv', true)
+  end,
+
+  open = function(self)
+    print('open')
+    gui.add('Info', 'Info', 'Button', [[
+ Manual switch. Output is boolean.
+ Double click to trigger.
+ ]])
+    gui.setSize()
+  end,
+
+  apply = function(self)
+  end,
+
+  close = function()
+  end,
+
+  avatar = function(self)
+    return block.getDefaultAvatar(0x50, "", [[
+      draw.circle(px(50), py(50), py(25))
+      draw.circle(px(50), py(50), py(18))
+    ]])
+  end,
+
+  generate = function(self)
+    local source =
+      [==[
+        local block = {}
+
+        block.start = function()
+          block.uuid = '.UUID'
+        end
+
+        block.step = function()
+          if token.get(block.uuid) == 'trigger' then
+            token.set(block.uuid, '')
+            return true
+          end
+          return false
+        end
+
+        block.stop = function()
+        end
+
+        return block
+      ]==]
+    local replaces = {
+      ['UUID'] = block.getUUID(),
+    }
+    return string.gsub(source, '%a+', replaces)
+  end,
+
+}

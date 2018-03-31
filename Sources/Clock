@@ -1,0 +1,46 @@
+-- V1.0a AR
+-- 31.12.2016 12:01:16 AR V1.0b
+-- 07.01.2017 15:12:04 AR V1.0c
+
+generic = {
+  parameter = {
+  },
+
+  init = function(self)
+    block.setInputsPinCount(0)
+    block.setOutputsPinCount(1)
+    block.modifyFlags('SupressStartFunctionCall', true)
+    block.modifyFlags('SupressStopFunctionCall', true)
+  end,
+
+  open = function(self)
+    gui.add('Info', 'Info', 'Clock', 'Output the current sim time')
+    gui.setSize()
+  end,
+
+  apply = function(self)
+  end,
+
+  close = function()
+  end,
+
+  avatar = function(self)
+    return block.getDefaultAvatar(0x51, '', 'draw.line(px(50), py(15), px(50), py(50), px(85), py(50))')
+  end,
+
+  generate = function(self)
+    local source =
+      [==[
+        return {
+
+          step = function()
+            return sim.timeS
+          end,
+
+        }
+      ]==]
+    return source
+  end,
+
+}
+

@@ -1,0 +1,71 @@
+-- V1.0a AR
+-- 04.04.2017 07:48:30 AR V1.0b
+
+generic = {
+  parameter = {
+    amplitude = 1.0,
+    bias = 0.0,
+    frequency = math.pi * 2.0,
+    phase = 0.0
+  },
+
+  init = function(self)
+    block.setInputsPinCount(1)
+    block.setOutputsPinCount(1)
+    block.modifyFlags('SupressStartFunctionCall', true)
+    block.modifyFlags('SupressStopFunctionCall', true)
+  end,
+
+  open = function(self)
+    gui.add('Info', 'Info', 'Sine Wave with variable freqency', [[
+Output a sine wave:
+q(t) = Amplitude * sin(Frequncy * t * a + Phase) + Bias
+If a == 1.0 basis frequncy is generated
+    ]])
+    gui.add('Edit', 'EditAmplitude', 'Amplitude')
+    gui.add('Edit', 'EditBias', 'Bias')
+    gui.add('Edit', 'EditFrequency', 'Frequency (rad/s)')
+    gui.add('Edit', 'EditPhase', 'Phase (rad)')
+    gui.set('EditAmplitude', 'Number', self.parameter.amplitude)
+    gui.set('EditBias', 'Number', self.parameter.bias)
+    gui.set('EditFrequency', 'Number', self.parameter.frequency)
+    gui.set('EditPhase', 'Number', self.parameter.phase)
+    gui.setSize()
+  end,
+
+  apply = function(self)
+    self.parameter.amplitude = gui.get('EditAmplitude', 'Number')
+    self.parameter.bias = gui.get('EditBias', 'Number')
+    self.parameter.frequency = gui.get('EditFrequency', 'Number')
+    self.parameter.phase = gui.get('EditPhase', 'Number')
+  end,
+
+  close = function()
+  end,
+
+  avatar = function(self)
+    return block.getDefaultAvatar(0x50, "'\\xE2\\x97\\xA0\\xE2\\x97\\xA1'")
+  end,
+
+  generate = function(self)
+    local source =
+      [==[
+        return {
+
+          step = function(a)
+            return AMPLITUDE * math.sin(FREQUENCY * sim.timeS * a + PHASE) + BIAS
+          end
+
+        }
+      ]==]
+    local replaces = {
+      ['AMPLITUDE'] = self.parameter.amplitude,
+      ['BIAS'] = self.parameter.bias,
+      ['FREQUENCY'] = self.parameter.frequency,
+      ['PHASE'] = self.parameter.phase,
+    }
+    return string.gsub(source, '%a+', replaces)
+  end,
+
+}
+

@@ -1,0 +1,75 @@
+-- V1.0a AR
+-- 01.04.2017 04:59:18 AR V1.0b
+-- 13.07.2017 17:46:10 AR V1.0c
+-- 08.10.2017 14:56:30 AR V1.0d Automatic output type detection
+-- 04.01.2018 10:14:20 AR V1.0e Also set type on init
+-- 10.02.2018 09:54:24 AR V1.0f Change to constant Expression
+
+block.setSize(51, 21)
+
+generic = {
+  parameter = {
+    value = '0'
+  },
+
+  init = function(self)
+    block.setInputsPinCount(0)
+    block.setOutputsPinCount(1)
+    block.setOutputPinTypeRestrains(1, 1 << require('sys').typeOfExpression(self.parameter.value))
+    block.modifyFlags('SupressStartFunctionCall', true)
+    block.modifyFlags('SupressStopFunctionCall', true)
+  end,
+
+  open = function(self)
+    gui.add('Info', 'Info', 'Const', [[
+A constant value, list or an expresssion.
+
+* Use {} for a vector.
+* Use "string" for a string.
+* Use identifier for a global variable.
+]])
+    gui.add('Edit', 'EditValue', 'Value or expression')
+    gui.set('EditValue', 'Expression', self.parameter.value)
+    gui.setSize()
+  end,
+
+  apply = function(self)
+    self.parameter.value = gui.get('EditValue', 'Expression')
+    local type = require('sys').typeOfExpression(self.parameter.value)
+    assert(type >= 0, 'Can\'t evaluate datatype of the constant value.\nSyntax error?\nNot a constant value?')
+
+    block.setOutputPinTypeRestrains(1, 1 << type)
+  end,
+
+  close = function()
+  end,
+
+  avatar = function(self)
+    return block.getDefaultAvatar(0x50, "'" .. self.parameter.value .. "'")
+  end,
+
+  generate = function(self)
+    local source =
+      [==[
+        return {
+
+          step = function()
+            return VALUE
+          end
+
+        }
+      ]==]
+    local value = self.parameter.value
+    local type = require('sys').typeOfExpression(value)
+    if type == 6 then
+      local f = assert((load or loadstring)('return (' .. value .. ')()'))
+      value = f()
+    end
+    local replaces = {
+      ['VALUE'] = value
+    }
+    return string.gsub(source, '%a+', replaces)
+  end,
+
+}
+

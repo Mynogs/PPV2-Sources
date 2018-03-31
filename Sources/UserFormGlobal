@@ -1,0 +1,57 @@
+-- V1.0a AR
+-- 26.10.2017 07:37:32 AR V1.0b
+-- 02.03.2018 08:22:52 AR V1.0c Add commends to show GUI wizard insert bookmaks
+
+generic = {
+  parameter = {
+  },
+
+  init = function(self)
+    block.modifyFlags('SupressStopFunctionCall', true)
+    block.setLibraryPath('') -- Break the link to prevent version warnings
+  end,
+
+  open = function(self)
+    --gui.add(...)
+    --gui.set(...)
+    --gui.setEventHandler(...)
+    gui.setSize()
+  end,
+
+  apply = function(self)
+    --gui.get(..)
+  end,
+
+  close = function()
+  end,
+
+  generate = function(self)
+    local source =
+      [==[
+        local block = {}
+
+        block.start = function()
+          global = global or {}
+          local t = {
+TT
+}
+          for k, v in pairs(t) do
+            global[k] = v
+          end
+        end
+
+        block.step = function(a)
+        end
+
+        block.stop = function()
+        end
+
+        return block
+      ]==]
+    local replaces = {
+      ['TT'] = gui.tableToSource(self.parameter)
+    }
+    return string.gsub(source, '%a+', replaces)
+  end,
+}
+
