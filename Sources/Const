@@ -4,12 +4,25 @@
 -- 08.10.2017 14:56:30 AR V1.0d Automatic output type detection
 -- 04.01.2018 10:14:20 AR V1.0e Also set type on init
 -- 10.02.2018 09:54:24 AR V1.0f Change to constant Expression
+-- 21.11.2018 16:57:09 AR V1.0f Show the type result
 
 block.setSize(51, 21)
 
 generic = {
   parameter = {
     value = '0'
+  },
+
+  typeToName = {
+    [0] = 'is always nil.',
+    [1] = 'a boolean.',
+    [2] = 'light user data.',
+    [3] = 'a number.',
+    [4] = 'a string.',
+    [5] = 'a table.',
+    [6] = 'a function. Note the result of the function may not constant!',
+    [7] = 'user data.',
+    [8] = 'a thread. Note the result of the thread return may not constant!',
   },
 
   init = function(self)
@@ -21,15 +34,38 @@ generic = {
   end,
 
   open = function(self)
-    gui.add('Info', 'Info', 'Const', [[
-A constant value, list or an expresssion.
-
-* Use {} for a vector.
-* Use "string" for a string.
-* Use identifier for a global variable.
-]])
-    gui.add('Edit', 'EditValue', 'Value or expression')
+    gui.add('HTMLInfo', 'Info', 'Const', [=[
+A constant value, list or an expresssion.<br>
+<ul>
+<li>Use <i>{...}</i> for a vector.
+<li>Use <i>{{...},{...},...}</i> for a 2D vector.
+<li>Use <i>'string'</i>, <i>"string"</i> or <i>[[string]]</i> for a string.
+<li>Use <i>identifier</i> for a global variable.
+<li>Use <i>function() ... end</i> for a function
+</ul>
+]=])
+    gui.add('Edit', 'EditValue', 'Value or expression', {Width = 350})
+    gui.add('Label', 'LabelInfo', '')
     gui.set('EditValue', 'Expression', self.parameter.value)
+    gui.setEventHandler(
+      self,
+      'EditValue',
+      {
+        Change = function(self)
+          local types = table.pack(require('sys').typeOfExpression(gui.get('EditValue', 'Text')))
+          local s
+          if #types == 0 then
+            s = 'Error: Expressen has no result!'
+          elseif #types > 1 then
+            s = 'Error: Expression has more the one result! (Missing outher { } to make a table?)'
+          else
+            s = 'Result of the expression is ' .. self.typeToName[types[1]]
+          end
+          gui.set('LabelInfo', 'Caption', s)
+          gui.update('LabelInfo')
+        end,
+      }
+    )
     gui.setSize()
   end,
 
