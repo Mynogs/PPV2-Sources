@@ -1,0 +1,76 @@
+-- 25.12.2018 19:26:04 AR V1.0a
+
+generic = {
+  name = 'Ramp',
+  parameter = {
+    timeS = 1.0,
+    inital = 0.0,
+    final = 1.0,
+    slope = 1.0,
+  },
+
+  init = function(self)
+    block.setInputsPinCount(0)
+    block.setOutputsPinCount(1)
+    block.modifyFlags('SupressStartFunctionCall', true)
+    block.modifyFlags('SupressStopFunctionCall', true)
+  end,
+
+  open = function(self)
+    gui.add('Info', 'Info', self.name, 'Output a ramp')
+    gui.add('Edit', 'EditTime', 'Time [s]')
+    gui.add('Edit', 'EditInital', 'Inital value')
+    gui.add('Edit', 'EditFinal', 'Final value')
+    gui.add('Edit', 'EditSlope', 'Slope')
+    gui.set('EditTime', 'Number', self.parameter.timeS)
+    gui.set('EditInital', 'Number', self.parameter.inital)
+    gui.set('EditFinal', 'Number', self.parameter.final)
+    gui.set('EditSlope', 'Number', self.parameter.slope)
+    gui.setSize()
+  end,
+
+  apply = function(self)
+    self.parameter.timeS = gui.get('EditTime', 'Number')
+    self.parameter.inital = gui.get('EditInital', 'Number')
+    self.parameter.final = gui.get('EditFinal', 'Number')
+    self.parameter.slope = gui.get('EditSlope', 'Number')
+  end,
+
+  close = function()
+  end,
+
+  avatar = function(self)
+    return block.getDefaultAvatar(0x50, '', [[
+      draw.line(px(30), py(60), px(40), py(60), px(70), py(30))
+    ]])
+  end,
+
+  generate = function(self)
+    local source =
+      [==[
+        return {
+
+          step = function()
+            if sim.timeS >= TIME then
+              local q = (sim.timeS - TIME) * SLOPE + INITAL
+              if q < FINAL then
+                return q
+              end
+              return FINAL;
+            end
+            return INITAL
+          end
+
+        }
+      ]==]
+    local replaces = {
+      ['TIME'] = self.parameter.timeS,
+      ['INITAL'] = self.parameter.inital,
+      ['FINAL'] = self.parameter.final,
+      ['SLOPE'] = self.parameter.slope,
+    }
+    return string.gsub(source, '%a+', replaces)
+  end,
+
+}
+
