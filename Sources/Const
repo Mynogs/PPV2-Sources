@@ -5,6 +5,7 @@
 -- 04.01.2018 10:14:20 AR V1.0e Also set type on init
 -- 10.02.2018 09:54:24 AR V1.0f Change to constant Expression
 -- 21.11.2018 16:57:09 AR V1.0f Show the type result
+-- 25.12.2018 17:11:31 AR V1.0g Handle empty datatype
 
 block.setSize(51, 21)
 
@@ -52,6 +53,7 @@ A constant value, list or an expresssion.<br>
       'EditValue',
       {
         Change = function(self)
+          print('##')
           local types = table.pack(require('sys').typeOfExpression(gui.get('EditValue', 'Text')))
           local s
           if #types == 0 then
@@ -72,8 +74,7 @@ A constant value, list or an expresssion.<br>
   apply = function(self)
     self.parameter.value = gui.get('EditValue', 'Expression')
     local type = require('sys').typeOfExpression(self.parameter.value)
-    assert(type >= 0, 'Can\'t evaluate datatype of the constant value.\nSyntax error?\nNot a constant value?')
-
+    assert(type and type >= 0, 'Can\'t evaluate datatype of the constant value.\nSyntax error?\nNot a constant value?')
     block.setOutputPinTypeRestrains(1, 1 << type)
   end,
 
