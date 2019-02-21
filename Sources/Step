@@ -1,7 +1,10 @@
 -- V1.0a AR
 -- 31.12.2016 12:05:30 AR V1.0b
+-- 25.12.2018 19:19:16 AR V1.0c
+-- 21.02.2019 09:14:16 AR V1.0d nil, boolean, number, table
 
 generic = {
+  name = 'Step',
   parameter = {
     timeS = 1.0,
     inital = 0.0,
@@ -9,15 +12,15 @@ generic = {
   },
 
   init = function(self)
-    block.setInputsPinCount(0)
     block.setOutputsPinCount(1)
+    block.setOutputPinTypeRestrains(1, 'nil', 'boolean', 'number', 'table')
     block.modifyFlags('SupressStartFunctionCall', true)
     block.modifyFlags('SupressStopFunctionCall', true)
   end,
 
   open = function(self)
-    gui.add('Info', 'Info', 'Step', 'Output a step')
-    gui.add('Edit', 'EditTime', 'Time (s)')
+    gui.add('Info', 'Info', self.name, 'Output a step')
+    gui.add('Edit', 'EditTime', 'Time [s]')
     gui.add('Edit', 'EditInital', 'Inital value')
     gui.add('Edit', 'EditFinal', 'Final value')
     gui.set('EditTime', 'Number', self.parameter.timeS)
@@ -47,10 +50,10 @@ generic = {
         return {
 
           step = function()
-            if sim.timeS >= TIME then
-              return FINAL;
+            if sim.timeS < TIME then
+              return INITAL
             end
-            return INITAL
+            return FINAL
           end
 
         }
