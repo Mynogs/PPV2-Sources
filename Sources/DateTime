@@ -1,0 +1,80 @@
+-- 05.03.2019 13:46:28 AR V1.0a
+
+generic = {
+  parameter = {
+    bus = false
+  },
+
+  refreshPins = function(self)
+    if self.parameter.bus then
+      block.setOutputsPinCount(1)
+      block.setOutputPinTypeRestrains(1, 'table')
+    else
+      block.setOutputsPinCount(6)
+      block.setOutputPinName(1, 'year')
+      block.setOutputPinName(2, 'month')
+      block.setOutputPinName(3, 'day')
+      block.setOutputPinName(4, 'hour')
+      block.setOutputPinName(5, 'minute')
+      block.setOutputPinName(6, 'second')
+    end
+  end,
+
+  init = function(self)
+    generic.refreshPins(self)
+    block.modifyFlags('SupressStartFunctionCall', true)
+    block.modifyFlags('SupressStopFunctionCall', true)
+  end,
+
+  open = function(self)
+    gui.add('Info', 'Info', 'Date time',
+[[
+]])
+    gui.add('CheckBox', 'CheckBoxBus', 'Bus')
+    gui.set('CheckBoxBus', 'Checked', self.parameter.bus)
+    gui.setSize()
+  end,
+
+  apply = function(self)
+    self.parameter.bus = gui.get('CheckBoxBus', 'Checked')
+    generic.refreshPins(self)
+  end,
+
+  close = function()
+  end,
+
+  avatar = function(self)
+    return block.getDefaultAvatar(0x50, "'Date\\nTime'")
+  end,
+
+  generate = function(self)
+    local source =
+      [==[
+        local block = {}
+
+        block.step = function()
+          STEP
+        end
+
+        return block
+      ]==]
+    local step
+    if self.parameter.bus then
+      step = [[
+
+  return  os.date('*t')
+      ]]
+    else
+      step = [[
+
+  local date = os.date('*t')
+  return date.year, date.month, date.day, date.hour, date.min, date.sec)
+      ]]
+    end
+    local replaces = {
+      ['STEP'] = step,
+    }
+    return string.gsub(source, '%a+', replaces)
+  end,
+
+}
