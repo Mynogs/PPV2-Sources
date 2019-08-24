@@ -1,5 +1,5 @@
 -- 05.03.2019 13:46:28 AR V1.0a
--- 24.08.2019 06:34:59 AM V1.0b Remove syntax error
+-- 24.08.2019 06:34:59 AM V1.0b Remove syntax error (remove ')')
 
 generic = {
   parameter = {
